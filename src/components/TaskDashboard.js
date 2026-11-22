@@ -68,7 +68,15 @@ export default function TaskDashboard({ session }) {
       })
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
+    // Live updates use a websocket, which the /sb proxy can't carry. Refetch
+    // when the tab comes back into focus so changes from Mary still show up.
+    const onFocus = () => fetchTasks()
+    window.addEventListener('focus', onFocus)
+
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      supabase.removeChannel(channel)
+    }
   }, [fetchTasks, user.id])
 
   // Parse natural language input
